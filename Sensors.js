@@ -32,6 +32,13 @@ function Sensors() {
 const sensorSockets = [];
 
 Sensors.prototype.listenTo = function listenTo(namespace) {
+  let rightCount = 0;
+  let centerCount = 0;
+  let leftCount = 0;
+  let rightMsg = '';
+  let centerMsg = '';
+  let leftMsg = '';
+
   namespace.on('connection', (socket) => {
     for (const i in sensorSockets) {
       sensorSockets[i].socket.disconnect();
@@ -42,98 +49,76 @@ Sensors.prototype.listenTo = function listenTo(namespace) {
 
     console.log(`Socket ID: ${socket.id} connected to /sensors`);
 
-    socket.on('join-alerts', () => {
-      socket.join('alerts');
-      console.log(`Socket ID: ${socket.id} subscribed to alerts`);
-      this.rightInterval = setInterval(() => {
-        const value = this.distSensor1.getBasicValue();
-        if(value > 50 && value <= 100){
-          namespace.to('alerts').emit('right-alert', {message: 'Objeto cerca a la derecha'});
+    this.rightInterval = setInterval(() => {
+      const value = this.distSensor1.getBasicValue();
+      if(value > 50 && value <= 100){
+        if(rightMsg != 'Derecha cerca' || rightCount >= 6){
+          namespace.emit('right-alert', {message: 'Derecha cerca'});
+          rightMsg = 'Derecha cerca';
+          rightCount = 0;
+        }else{
+          rightCount++;
         }
-        if(value <= 50){
-          namespace.to('alerts').emit('right-alert', {message: 'Objeto muy cerca a la derecha'});
+      }
+      if(value <= 50){
+        if(rightMsg != 'Derecha muy cerca' || rightCount >= 4){
+          namespace.emit('right-alert', {message: 'Derecha muy cerca'});
+          rightMsg = 'Derecha muy cerca';
+          rightCount = 0;
+        }else {
+          rightCount++;
         }
-      }, 5000);
-      this.centerInterval = setInterval(() => {
-        const value = this.distSensor2.getBasicValue();
-        if(value > 50 && value <= 100){
-          namespace.to('alerts').emit('center-alert', {message: 'Objeto cerca al frente'});
+      }
+    }, 1500);
+    this.centerInterval = setInterval(() => {
+      const value = this.distSensor2.getBasicValue();
+      if(value > 50 && value <= 100){
+        if(centerMsg != 'Enfrente cerca' || centerCount >= 6){
+          namespace.emit('center-alert', {message: 'Enfrente cerca'});
+          centerMsg = 'Enfrente cerca';
+          centerCount = 0;
+        }else{
+          centerCount++;
         }
-        if(value <= 50){
-          namespace.to('alerts').emit('center-alert', {message: 'Objeto muy cerca al frente'});
+      }
+      if(value <= 50){
+        if(centerMsg != 'Enfrente muy cerca' || centerCount >= 4){
+          namespace.emit('center-alert', {message: 'Enfrente muy cerca'});
+          centerMsg = 'Enfrente muy cerca';
+          centerCount = 0;
+        }else{
+          centerCount++;
         }
-      }, 5000);
-      this.leftInterval = setInterval(() => {
-        const value = this.distSensor3.getBasicValue();
-        if(value > 50 && value <= 100){
-          namespace.to('alerts').emit('left-alert', {message: 'Objeto cerca a la izquierda'});
+      }
+    }, 1500);
+    this.leftInterval = setInterval(() => {
+      const value = this.distSensor3.getBasicValue();
+      if(value > 50 && value <= 100){
+        if(leftMsg != 'Izquierda cerca' || leftCount >= 6){
+          namespace.emit('left-alert', {message: 'Izquierda cerca'});
+          leftMsg = 'Izquierda cerca';
+          leftCount = 0;
+        }else {
+          leftCount++;
         }
-        if(value <= 50){
-          namespace.to('alerts').emit('left-alert', {message: 'Objeto muy cerca a la izquierda'});
+      }
+      if(value <= 50){
+        if(leftMsg != 'Izquierda muy cerca' || leftCount >= 4){
+          namespace.emit('left-alert', {message: 'Izquierda muy cerca'});
+          leftMsg = 'Izquierda muy cerca';
+          leftCount = 0;
+        }else {
+          leftCount++;
         }
-      }, 5000);
-    });
+      }
+    }, 1500);
 
-    socket.on('join-position-request', () => {
-      socket.join('position-request');
-      // console.log(`Socket ID: ${socket.id} subscribed to position requests`);
-      this.button.on('change', (state) => {
-        if(state){
-          namespace.to('position-request').emit('position-request',true);
-        }
-      });
+    this.button.on('change', (state) => {
+      if(state){
+        namespace.emit('position-request',true);
+      }
     });
   });
 }
-
-// Sensors.prototype.listenButton = function () {
-//   this.button.on('change', (state) => {
-//     if(state){
-//       this.myNamespace.to('position-request').emit('position-request',true);
-//     }
-//   });
-//
-// }
-//
-// Sensors.prototype.alerts = function alerts(value, close, veryClose, alertName, alertMsg) {
-//   // console.log(value);
-//   switch (true) {
-//     case (value <= 50): // Objeto a menos de 50 cm a la derecha
-//       if(!veryClose.isRunning()) { // ya hay una notificacion ejecutandose
-//         // console.log(`Objeto muy cerca por ${alertMsg}`);
-//         this.myNamespace.to('alerts').emit(alertName, {message: `Objeto muy cerca por ${alertMsg}`});
-//         veryClose.start(() => {
-//           // console.log(`Objeto muy cerca por ${alertMsg}`);
-//           this.myNamespace.to('alerts').emit(alertName, {message: `Objeto muy cerca por ${alertMsg}`});
-//         }, 5000);
-//       }
-//       if(close.isRunning()){
-//         close.stop();
-//       }
-//       break;
-//     case (value <= 100):
-//       if(!close.isRunning()) { // ya hay una notificacion ejecutandose
-//         // console.log(`Objeto cerca por ${alertMsg}`);
-//         this.myNamespace.to('alerts').emit(alertName, {message: `Objeto cerca por ${alertMsg}`});
-//         close.start(() => {
-//           // console.log(`Objeto cerca por ${alertMsg}`);
-//           this.myNamespace.to('alerts').emit(alertName, {message: `Objeto cerca por ${alertMsg}`});
-//         }, 8000);
-//       }
-//       if(veryClose.isRunning()){
-//         veryClose.stop();
-//       }
-//       break;
-//     default:
-//       setTimeout(() => {
-//         if(close.isRunning()){
-//           close.stop();
-//         }
-//         if(veryClose.isRunning()){
-//           veryClose.stop();
-//         }
-//       }, 5000);
-//   }
-// }
 
 module.exports = Sensors;

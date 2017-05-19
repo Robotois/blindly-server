@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^4.15.2",
     "robotois-button": "git+https://github.com/Robotois/robotois-button.git",
-    "robotois-distance-sensor": "git+https://github.com/Robotois/robotois-distance-sensor.git"
+    "robotois-distance-sensor": "git+https://github.com/Robotois/robotois-distance-sensor.git",
+    "socket.io": "^2.0.1"
   }
 }
